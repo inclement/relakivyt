@@ -1,0 +1,87 @@
+#:import Vector kivy.vector.Vector
+#:import sqrt math.sqrt
+
+<LorentzTransformer>:
+    gamma: 1 / sqrt(1 - sum([v**2 for v in self.velocity]))
+
+<Space>:
+        
+<Interface>:
+    orientation: 'vertical'
+    space: space
+    Button:
+        size_hint_y: None
+        height: sp(30)
+        on_release: spaceship.reverse()
+    Slider:
+        id: speed_slider
+        size_hint_y: None
+        height: sp(30)
+        min: 0
+        max: 0.99
+        value: 0.0
+    Slider:
+        id: angle_slider
+        size_hint_y: None
+        height: sp(30)
+        min: 0
+        max: 1.
+        value: 0.
+    Space:
+        id: space
+        spaceship: spaceship
+        Spaceship:
+            id: spaceship
+            velocity: [0., speed_slider.value]
+            angular_velocity: angle_slider.value
+    
+        
+<Spaceship>:
+    real_pos: Vector(self.center) - Vector(self.size)/2.
+
+    # canvas.after:
+    #     Color: 
+    #         hsv: .1, 1, .5
+    #         a: .2
+    #     Rectangle:
+    #         pos: self.pos
+    #         size: self.bbox[1]
+
+    #     Color:
+    #         rgb: 0, 1, 0
+    #     Line:
+    #         points: [self.x, self.top, self.right, self.top]
+    #     Line:
+    #         points: [self.x, self.y, self.x, self.top]
+    #     Line:
+    #         points: [self.center_x, self.y, self.center_x, self.top]
+    #     Line:
+    #         points: [self.x, self.center_y, self.right, self.center_y]
+
+    #     Line:
+    #         points: [self.center[0], self.center[1], self.right, self.top]
+
+    BoxLayout:
+        canvas:
+            Color:
+                rgba: 0, 0, 1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+            Color:
+                rgba: 0,1,0,1
+            Rectangle:
+                pos: self.pos[0] + 0.2*self.width, self.pos[1]
+                size: self.size[0] - 0.4*self.width, 0.6*self.size[1]
+            Triangle:
+                points:
+                    [self.pos[0], self.pos[1] + 0.6*self.height,
+                    self.pos[0] + self.width, self.pos[1] + 0.6*self.height,
+                    self.pos[0] + 0.5*self.width, self.pos[1] + self.height]
+            Color:
+                rgba: 1, 0, 0, 1
+            Ellipse:
+                pos: Vector(self.center) - Vector(self.size)/20.
+                size: Vector(self.size) / 10.
+            
+                
