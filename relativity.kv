@@ -1,87 +1,68 @@
 #:import Vector kivy.vector.Vector
 #:import sqrt math.sqrt
+#:import atan2 math.atan2
+#:import sin math.sin
+#:import cos math.cos
+#:import tanh math.tanh
 
-<LorentzTransformer>:
-    gamma: 1 / sqrt(1 - sum([v**2 for v in self.velocity]))
-
-<Space>:
-        
-<Interface>:
-    orientation: 'vertical'
-    space: space
-    Button:
+<GameLevel>:
+    spaceship: spaceship
+    BoxLayout:
         size_hint_y: None
         height: sp(30)
-        on_release: spaceship.reverse()
-    Slider:
-        id: speed_slider
-        size_hint_y: None
-        height: sp(30)
-        min: 0
-        max: 0.99
-        value: 0.0
-    Slider:
-        id: angle_slider
-        size_hint_y: None
-        height: sp(30)
-        min: 0
-        max: 1.
-        value: 0.
-    Space:
-        id: space
-        spaceship: spaceship
-        Spaceship:
-            id: spaceship
-            velocity: [0., speed_slider.value]
-            angular_velocity: angle_slider.value
-    
+        pos_hint: {'top': 0.1}
+        canvas:
+            Color:
+                rgba: 0, 1, 1, 0.5
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        Label:
+            text: 'naive v:' + str(spaceship.naive_velocity)
+        Label:
+            text: 'naive a:' + str(spaceship.acceleration)
+        Label:
+            text: 'naive s:' + str(spaceship.naive_speed)
+        Label:
+            text: 's:' + str(spaceship.speed)
+        Label:
+            text: 'v:' + str(spaceship.velocity)
+        Label:
+            text: 'angle:' + str(spaceship.direction)
+    LorentzBackground:
+    Spaceship:
+        id: spaceship
         
 <Spaceship>:
-    real_pos: Vector(self.center) - Vector(self.size)/2.
+    size_hint: None, None
+    pos_hint: {}
 
-    # canvas.after:
-    #     Color: 
-    #         hsv: .1, 1, .5
-    #         a: .2
-    #     Rectangle:
-    #         pos: self.pos
-    #         size: self.bbox[1]
-
-    #     Color:
-    #         rgb: 0, 1, 0
-    #     Line:
-    #         points: [self.x, self.top, self.right, self.top]
-    #     Line:
-    #         points: [self.x, self.y, self.x, self.top]
-    #     Line:
-    #         points: [self.center_x, self.y, self.center_x, self.top]
-    #     Line:
-    #         points: [self.x, self.center_y, self.right, self.center_y]
-
-    #     Line:
-    #         points: [self.center[0], self.center[1], self.right, self.top]
+    direction: atan2(self.naive_velocity[1], self.naive_velocity[0])
+    naive_speed: sqrt(sum([v**2 for v in self.naive_velocity]))
+    speed: tanh(self.naive_speed)
+    velocity: self.speed * Vector([cos(self.direction), sin(self.direction)])
 
     BoxLayout:
         canvas:
             Color:
                 rgba: 0, 0, 1, 1
-            Rectangle:
+            Ellipse:
                 pos: self.pos
                 size: self.size
             Color:
                 rgba: 0,1,0,1
-            Rectangle:
-                pos: self.pos[0] + 0.2*self.width, self.pos[1]
-                size: self.size[0] - 0.4*self.width, 0.6*self.size[1]
-            Triangle:
-                points:
-                    [self.pos[0], self.pos[1] + 0.6*self.height,
-                    self.pos[0] + self.width, self.pos[1] + 0.6*self.height,
-                    self.pos[0] + 0.5*self.width, self.pos[1] + self.height]
+            Ellipse
+                pos: Vector(self.pos) + Vector(self.size)*0.2
+                size: Vector(self.size) * 0.6
             Color:
                 rgba: 1, 0, 0, 1
             Ellipse:
                 pos: Vector(self.center) - Vector(self.size)/20.
                 size: Vector(self.size) / 10.
+            Color:
+                rgb: 1, 0, 1
+            Line:
+                points: [self.center[0], self.center[1], self.center[0] + 0.2*root.speed*self.width*cos(root.direction), self.center[1] + 0.2*root.speed*self.height*sin(root.direction)]
+                width: 2
             
                 
