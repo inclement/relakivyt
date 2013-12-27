@@ -3,6 +3,7 @@ from kivy.uix.widget import Widget
 from kivy.uix.scatter import Scatter
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.anchorlayout import AnchorLayout
 from kivy.properties import *
 from kivy.clock import Clock
 from kivy.core.window import Window
@@ -14,7 +15,13 @@ from math import sqrt, sin, cos, tan, tanh
 
 from functools import partial
 
-__version__ == "0.1"
+__version__ = "0.1"
+
+class GameLevelContainer(AnchorLayout):
+    gamelevel = ObjectProperty()
+    def update(self, dt):
+        if self.gamelevel:
+            self.gamelevel.update(dt)
 
 class Spaceship(Scatter):
     naive_velocity = ListProperty([0.0, 0.0])
@@ -46,21 +53,24 @@ class Spaceship(Scatter):
     def update(self, dt):
         self.accelerate()
         self.move()
-        if self.x < 0:
-            self.naive_velocity[0] = -1*self.naive_velocity[0]
-        if self.x + self.width > Window.width:
-            self.naive_velocity[0] = -1*self.naive_velocity[0]
-        if self.y < 0:
-            self.naive_velocity[1] = -1*self.naive_velocity[1]
-        if self.y + self.width > Window.height:
-            self.naive_velocity[1] = -1*self.naive_velocity[1]
+
+        if self.parent:
+            if self.x < self.parent.x:
+                self.naive_velocity[0] = -1*self.naive_velocity[0]
+            if self.x + self.width > self.parent.right:
+                self.naive_velocity[0] = -1*self.naive_velocity[0]
+            if self.y < self.parent.y:
+                self.naive_velocity[1] = -1*self.naive_velocity[1]
+            if self.y + self.height > self.parent.top:
+                self.naive_velocity[1] = -1*self.naive_velocity[1]
 
     def accelerate(self):
         self.naive_velocity = Vector(self.naive_velocity) + Vector(self.acceleration) 
 
     def move(self):
         velocity = self.velocity
-        self.apply_transform(Matrix().translate(velocity[0], velocity[1], 0.0))
+        real_velocity = Vector(velocity) * Vector(self.parent.size) / 100.
+        self.apply_transform(Matrix().translate(real_velocity[0], real_velocity[1], 0.0))
 
     def reverse(self):
         self.naive_velocity = -1*Vecotr(self.naive_velocity)
@@ -84,10 +94,10 @@ class Spaceship(Scatter):
         elif keycode1 == 276:  # left
             self.accel_left = True
 
-        self.acceleration = (Vector([0., 0.1])*self.accel_up +
-                             Vector([0., -0.1])*self.accel_down +
-                             Vector([0.1, 0.])*self.accel_right +
-                             Vector([-0.1, 0.])*self.accel_left)
+        self.acceleration = (Vector([0., 0.02])*self.accel_up +
+                             Vector([0., -0.02])*self.accel_down +
+                             Vector([0.02, 0.])*self.accel_right +
+                             Vector([-0.02, 0.])*self.accel_left)
             
         if keycode1 == 32:
             self.stop()
@@ -103,10 +113,10 @@ class Spaceship(Scatter):
         elif keycode1 == 276:  # left
             self.accel_left = False
 
-        self.acceleration = (Vector([0., 0.2])*self.accel_up +
-                             Vector([0., -0.2])*self.accel_down +
-                             Vector([0.2, 0.])*self.accel_right +
-                             Vector([-0.2, 0.])*self.accel_left)
+        self.acceleration = (Vector([0., 0.02])*self.accel_up +
+                             Vector([0., -0.02])*self.accel_down +
+                             Vector([0.02, 0.])*self.accel_right +
+                             Vector([-0.02, 0.])*self.accel_left)
 
 class GameLevel(FloatLayout):
     spaceship = ObjectProperty()
@@ -115,13 +125,18 @@ class GameLevel(FloatLayout):
             self.spaceship.update(dt)
 
 class LorentzBackground(FloatLayout):
-    pass
+    pos_offset = ListProperty([0.0, 0.0])
+    spaceship = ObjectProperty()
+    boost_speed = NumericProperty(0.000001)
+    pos_fraction = ListProperty([0.0, 0.0])  # spaceship pos as a
+                                             # fraction across the box
+    
 
 class RelativityApp(App):
     game = ObjectProperty()
     keyboard_widget = ObjectProperty(None, allownone=True)
     def build(self):
-        interface = GameLevel()
+        interface = GameLevelContainer()
         Clock.schedule_interval(interface.update, 1/30.)
         Window.bind(on_key_down=self.on_key_down)
         return interface

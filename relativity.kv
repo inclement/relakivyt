@@ -5,36 +5,42 @@
 #:import cos math.cos
 #:import tanh math.tanh
 
+<GameLevelContainer>:
+    gamelevel: gamelevel
+    GameLevel:
+        id: gamelevel
+        size: min(root.size), min(root.size)
+        size_hint: None, None
+
+<LorentzBackground>:
+    Image:
+        size_hint: 1, 1
+        pos_hint: {'x': 0, 'y': 0}
+        allow_stretch: True
+        keep_ratio: False
+        source: 'colours2.png'
+
 <GameLevel>:
     spaceship: spaceship
-    BoxLayout:
-        size_hint_y: None
-        height: sp(30)
-        pos_hint: {'top': 0.1}
-        canvas:
-            Color:
-                rgba: 0, 1, 1, 0.5
-            Rectangle:
-                size: self.size
-                pos: self.pos
-        Label:
-            text: 'naive v:' + str(spaceship.naive_velocity)
-        Label:
-            text: 'naive a:' + str(spaceship.acceleration)
-        Label:
-            text: 'naive s:' + str(spaceship.naive_speed)
-        Label:
-            text: 's:' + str(spaceship.speed)
-        Label:
-            text: 'v:' + str(spaceship.velocity)
-        Label:
-            text: 'angle:' + str(spaceship.direction)
+    canvas:
+        Color:
+            rgba: 0.1, 0.1, 0.1, 1
+        Rectangle:
+            size: self.size
+            pos: self.pos
     LorentzBackground:
+        id: lbg
+        pos: Vector(root.pos) + Vector(self.pos_offset)
+        spaceship: spaceship
+        boost_speed: self.spaceship.speed if self.spaceship else 0.0
+        pos_fraction: (Vector(self.spaceship.center) - Vector(root.pos)) / Vector(root.size) if self.spaceship else [0.0, 0.0]
     Spaceship:
+        pos: root.pos
         id: spaceship
         
 <Spaceship>:
     size_hint: None, None
+    size: Vector(self.parent.size)/10. if self.parent else (200, 200)
     pos_hint: {}
 
     direction: atan2(self.naive_velocity[1], self.naive_velocity[0])
@@ -43,6 +49,7 @@
     velocity: self.speed * Vector([cos(self.direction), sin(self.direction)])
 
     BoxLayout:
+        size: Vector(self.parent.size) if self.parent else (200, 200)
         canvas:
             Color:
                 rgba: 0, 0, 1, 1
